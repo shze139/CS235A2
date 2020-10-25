@@ -10,15 +10,15 @@ WatchList
 <h3>WatchList</h3>
 <div class="watchlist">
 
-{% for item in watchlist %}
+{% for movie in movies %}
 <div class="watchlist-item">
-    {{ loop.index }}. <img src="{{ item.movie.Poster }}" alt="">
+    {{ loop.index }}. <img src="{{ movie.poster }}" alt="">
 
-        <a href="{{ url_for('movie.detail', id=item.movie.imdbID) }}">{{ item.movie.Title }}</a>
+        <a href="{{ url_for('movie.detail', id=movie.id) }}">{{ movie.title }}</a>
 </div>
 {% else %}
     <div class="text-center">
-        WatchList is empty,  <a class="color1" href="{{ url_for('movie.index') }}">view movies</a>
+        WatchList is empty,  <a class="color1" href="{{ url_for('home.index') }}">view movies</a>
     </div>
 {% endfor %}
 

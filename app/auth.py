@@ -1,9 +1,9 @@
 from flask import Blueprint,request,render_template,session,flash,redirect,url_for
 from .forms import LoginForm,RegisterForm
-from .repository import UsersRepository
+from .models.user import User
+from .adapters.repository import repo_instance as repo
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
-usersRepository = UsersRepository()
 
 @bp.route('/login', methods=('GET','POST'))
 def login():
@@ -11,10 +11,10 @@ def login():
     if request.method == 'POST' and form.validate():
         username = form.username.data
         password = form.password.data
-        user = usersRepository.find_by_username(username)
-        if user and user.get('password') == password:
+        user = repo.get_user(username)
+        if user and user.password == password:
             session['username'] = username
-            return redirect(url_for('movie.index'))
+            return redirect(url_for('home.index'))
         else:
             flash('Username or password is error', 'is-error')
 
@@ -26,18 +26,18 @@ def register():
     if request.method == 'POST' and form.validate():
         username = form.username.data
         password = form.password.data
-        user = usersRepository.find_by_username(username)
+        user = repo.get_user(username)
         if user:
             flash('Username has been used.', 'is-error')
         else:
             flash('Register successful.', 'is-success')
-            usersRepository.add_user(username, password)
+            repo.add_user(User(username, password))
             return redirect(url_for('auth.login'))
 
     return render_template('register.html', form=form)
 
 @bp.route('/logout', methods=('GET',))
 def logout():
-    session.pop('username', None)
-    return redirect(url_for('movie.index'))
+    session.clear()
+    return redirect(url_for('home.index'))
 

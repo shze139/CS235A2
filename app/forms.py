@@ -6,7 +6,7 @@ from wtforms.validators import NumberRange,AnyOf,DataRequired,Length,EqualTo
 
 class SearchForm(FlaskForm):
     page = IntegerField('page', validators=[NumberRange(min=1, message='Page cannot be less than 1.')], default=1, widget=HiddenInput())
-    size = IntegerField('size', validators=[AnyOf([15,30,50,100], message='Size must be one of: 15, 30, 50, 100.')], default=15, widget=HiddenInput())
+    size = IntegerField('size', validators=[AnyOf([50,100], message='Size must be one of: 50, 100.')], default=50, widget=HiddenInput())
     key = StringField('key', default='')
     by = SelectField('by', choices=[('all', 'All'),('actor', 'Actor'),('genre', 'Genre'),('director', 'Director')],
                     validate_choice=False,

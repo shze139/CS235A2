@@ -1,85 +1,59 @@
 from flask import Blueprint,request,render_template,session,flash,redirect,url_for,abort
-from .repository import MoviesRepository,ReviewsRepository, WatchListRepository
-from .forms import SearchForm,ReviewForm
+from .forms import ReviewForm
 from datetime import datetime
 from .decorators import login_required
+from .adapters.repository import repo_instance as repo
+from .models.review import Review
 
-bp = Blueprint('movie', __name__, url_prefix='/')
-moviesRepository = MoviesRepository()
-reviewsRepository = ReviewsRepository()
-watchListRepository = WatchListRepository()
+bp = Blueprint('movie', __name__, url_prefix='/movie')
 
-@bp.route('/', methods=('GET',))
-def index():
-    form = SearchForm(request.args, meta={'csrf': False})
-    data = None
-    if form.validate():
-        page = form.page.data
-        size = form.size.data
-        key = form.key.data
-        by = form.by.data
-        data = moviesRepository.search(key, by, page, size)
-
-    return render_template('index.html', data=data, form=form)
-
-@bp.route('/movie/<id>', methods=('GET',))
+@bp.route('/<int:id>', methods=('GET',))
 def detail(id):
-    movie = moviesRepository.find_by_id(id)
-    reviews = reviewsRepository.find_by_movieId(id)
+    movie = repo.get_movie(id)
+    reviews = repo.get_reviews_by_movie_id(id)
     reviewForm = ReviewForm(request.form)
     hasWatch = False
     if movie:
         status_code = 200
         if 'username' in session:
-            hasWatch = watchListRepository.has_watch(session['username'], id)
+            hasWatch = repo.has_watch(session['username'], id)
     else:
         status_code = 404
     return render_template('movie.html', movie=movie, reviews=reviews, reviewForm=reviewForm, hasWatch=hasWatch), status_code
 
-@bp.route('/add_review/<imdbID>', methods=('POST',))
+@bp.route('/add_review/<int:movieId>', methods=('POST',))
 @login_required
-def add_review(imdbID):
+def add_review(movieId):
     form = ReviewForm(request.form)
     if form.validate():
-        createtime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        timestamp = datetime.now()
         content = form.content.data
         username = session.get('username')
-        reviewsRepository.add_review({
-            'username': username,
-            'content': content,
-            'createtime': createtime,
-            'imdbID': imdbID
-        })
+        repo.add_review(Review(content, timestamp, username, movieId))
         flash('add review successful', 'is-success')
     else:
         flash('review content cannot be empty', 'is-error')
-    return redirect(url_for('movie.detail', id=imdbID))
+    return redirect(url_for('movie.detail', id=movieId))
 
-@bp.route('/add_to_watchlist/<imdbID>', methods=('GET',))
+@bp.route('/add_to_watchlist/<int:movieId>', methods=('GET',))
 @login_required
-def add_to_watchlist(imdbID):
-    movie = moviesRepository.find_by_id(imdbID)
+def add_to_watchlist(movieId):
+    movie = repo.get_movie(movieId)
     if movie:
         username = session['username']
-        watchListRepository.add({
-            'username': username,
-            'imdbID': imdbID
-        })
-        return redirect(url_for('movie.detail', id=imdbID))
+        repo.add_watch(username, movieId)
+        return redirect(url_for('movie.detail', id=movieId))
     else:
         return abort(404)
 
-@bp.route('/remove_from_watchlist/<imdbID>', methods=('GET',))
+@bp.route('/remove_from_watchlist/<int:movieId>', methods=('GET',))
 @login_required
-def remove_from_watchlist(imdbID):
-    movie = moviesRepository.find_by_id(imdbID)
+def remove_from_watchlist(movieId):
+    movie = repo.get_movie(movieId)
     if movie:
         username = session['username']
-        watchListRepository.remove({
-            'username': username,
-            'imdbID': imdbID
-        })
-        return redirect(url_for('movie.detail', id=imdbID))
+        repo.remove_watch(username, movieId)
+        return redirect(url_for('movie.detail', id=movieId))
     else:
         return abort(404)
 
@@ -88,9 +62,7 @@ def remove_from_watchlist(imdbID):
 @login_required
 def watchlist():
     username = session['username']
-    watchlist = watchListRepository.find_by_username(username)
-    for item in watchlist:
-        item['movie'] = moviesRepository.find_by_id(item['imdbID'])
-    return render_template('watchlist.html', watchlist=watchlist)
+    movies = repo.get_watch_movies(username)
+    return render_template('watchlist.html', movies=movies)
 
 

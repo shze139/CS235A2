@@ -8,7 +8,7 @@
 <div class="search">
     <form>
         {{ form.page(value=1) }}
-        {{ form.size(value=15) }}
+        {{ form.size(value=50) }}
         {{ form.by() }}
         {{ form.key() }}
         <button>Search</button>
@@ -21,12 +21,24 @@
 <div>Found <span class="is-error">{{ data.total }}</span> movies by <strong>{{ form.by.data }}</strong></div>
 {% endif %}
 <div class="movies">
-    {% for movie in data.movies %}
-    <div class="movie">
-        <img src="{{ movie.Poster }}" alt="{{ movie.Title }}">
-        <a href="{{ url_for('movie.detail', id=movie.imdbID) }}">{{ movie.Title }}</a>
-    </div>
-    {% endfor %}
+    <table>
+        <tr>
+            <th>Rank</th>
+            <th class="text-left">Title</th>
+            <th>Release Year</th>
+            <th>Runtime (Minutes)</th>
+            <th>Metascore</th>
+        </tr>
+        {% for movie in data.movies %}
+        <tr>
+            <td>{{ movie.rank }}</td>
+            <td class="text-left"><a href="{{ url_for('movie.detail', id=movie.id) }}">{{ movie.title }}</a></td>
+            <td>{{ movie.year }}</td>
+            <td>{{ movie.runtime }}</td>
+            <td>{{ movie.metascore }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 </div>
 {% if data.totalPage > 0 %}
 <div class="paginations">
@@ -34,7 +46,7 @@
     {% if form.page.data == i + 1 %}
     <a class="active">{{i+1}}</a>
     {% else %}
-    <a href="{{ url_for('movie.index', key=form.key.data, by=form.by.data, size=form.size.data, page=i+1) }}">{{i+1}}</a>
+    <a href="{{ url_for('home.index', key=form.key.data, by=form.by.data, size=form.size.data, page=i+1) }}">{{i+1}}</a>
     {% endif %}
     {% endfor %}
 </div>

@@ -12,10 +12,10 @@
     <nav class="nav">
         <div class="container">
             <div class="logo">
-                <a href="{{ url_for('movie.index') }}">Logo</a>
+                <a href="{{ url_for('home.index') }}">Logo</a>
             </div>
             <ul>
-                <li><a href="{{ url_for('movie.index') }}">Home</a></li>
+                <li><a href="{{ url_for('home.index') }}">Home</a></li>
             </ul>
             <ul class="nav-right">
                 {% if 'username' in session %}
