@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from '_partials.html' import is_selected %}
+{% from '_partials.html' import render_field %}
+{% from '_partials.html' import render_message %}
+
+{% block title %}
+{% if movie%}
+ {{ movie.Title }}
+{% else %}
+Not Found
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<h3>Movie Detail</h3>
+{% if movie %}
+    <div class="movie-detail">
+        <div class="movie-poster">
+            <img src="{{ movie.Poster }}" alt="">
+        </div>
+        <div class="movie-content">
+            <h4>{{ movie.Title }}</h4>
+            <div><span>Genre:</span> {{ movie.Genre }}</div>
+            <div><span>Actor:</span> {{ movie.Actors }}</div>
+            <div><span>Director:</span> {{ movie.Director }}</div>
+            {% if hasWatch %}
+            <a class="remove" href="{{ url_for('movie.remove_from_watchlist', imdbID=movie.imdbID) }}">Remove From WatchList</a>
+            {% else %}
+            <a href="{{ url_for('movie.add_to_watchlist', imdbID=movie.imdbID) }}">Add To WatchList</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <h3>Movie Reviews({{ reviews | length }})</h3>
+    {% if 'username' in session %}
+    {{ render_message() }}
+    <form action="{{ url_for('movie.add_review', imdbID=movie.imdbID) }}" method="post" class="review-form">
+        {{ reviewForm.csrf_token }}
+        {{ reviewForm.content() }}
+        <div>
+        <button>Add</button></div>
+    </form>
+    {% else %}
+    <div class="text-center">
+        Login to add a review. <a class="color1" href="{{ url_for('auth.login') }}">Login</a>
+    </div>
+    {% endif %}
+    <div class="reviews">
+        {% for review in reviews %}
+            <div class="review">
+                <div class="review-header">
+                    <span>{{ loop.index }}.</span>
+                    <span>{{ review.username }}</span>
+                    <span>{{ review.createtime }}</span>
+                </div>
+                <div class="review-content">
+                    {{ review.content }}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center">
+        Movie not found
+    </div>
+{% endif %}
+{% endblock %}
